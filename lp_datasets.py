@@ -75,27 +75,29 @@ if __name__ == '__main__':
     #         print(len(data.x))
     
     dataset_name = 'UAL'
-    G = nx.read_pajek('data/datasets/raw/'+dataset_name+'_full.net')
-    for dimensions in [16,32,64,128,256]:
-    # Convert the NetworkX graph to PyTorch Geometric Data object
-        data = Data()
+    G=lp_dataset(dataset_name)
+    print(G)
+    # G = nx.read_pajek('data/datasets/raw/'+dataset_name+'_full.net')
+    # for dimensions in [16,32,64,128,256]:
+    # # Convert the NetworkX graph to PyTorch Geometric Data object
+    #     data = Data()
 
-        # Add empty features to the nodes
-        node_embeddings = get_node_embaddings(G,dimensions=dimensions)
-        data.x = torch.tensor(node_embeddings.vectors)  
+    #     # Add empty features to the nodes
+    #     node_embeddings = get_node_embaddings(G,dimensions=dimensions)
+    #     data.x = torch.tensor(node_embeddings.vectors)  
 
-        # Add edges to the graph
-        edge_index = []
-        for u, v,_ in G.edges:
-            edge_index.append([int(u), int(v)])
-            edge_index.append([int(v), int(u)]) # Assuming an undirected graph, add reverse edges as well
+    #     # Add edges to the graph
+    #     edge_index = []
+    #     for u, v,_ in G.edges:
+    #         edge_index.append([int(u), int(v)])
+    #         edge_index.append([int(v), int(u)]) # Assuming an undirected graph, add reverse edges as well
         
-        edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
-        data.edge_index = edge_index
+    #     edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+    #     data.edge_index = edge_index
 
         
-        pickle_file_path =f"data/datasets/processed/DataTest/{dataset_name}{dimensions}.pkl"  # Specify the path where you want to save the pickle file
+    #     pickle_file_path =f"data/datasets/processed/DataTest/{dataset_name}{dimensions}.pkl"  # Specify the path where you want to save the pickle file
     
-        # Save the 'data' variable to a pickle file
-        with open(pickle_file_path, "wb") as file:
-            pickle.dump(data, file)    
+    #     # Save the 'data' variable to a pickle file
+    #     with open(pickle_file_path, "wb") as file:
+    #         pickle.dump(data, file)    
