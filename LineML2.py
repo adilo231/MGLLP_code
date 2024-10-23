@@ -75,11 +75,14 @@ class Classifier(torch.nn.Module):
         return x
 
 def process_batch(batch):
+    print(batch)
+
    
     t=batch.clone()
     
     transform = LineGraph()
     line_graph = transform(t)
+    print(line_graph)
    
     
     # Step 2: Extract features for the line graph
@@ -95,10 +98,28 @@ def process_batch(batch):
     # becomes a node in the line graph. So we need to assign labels based on edge indices.
     num_edges = batch.edge_index.size(1)
     node_label_line_graph = torch.full((num_edges,), -1, dtype=torch.long, device=batch.edge_index.device)
-    
+    print(f"num_edges: {num_edges}, node_label_line_graph: {node_label_line_graph.shape} edge_label_index: {batch.edge_label_index.shape}, edge_label: {batch.edge_label_index.shape}")
     # Use edge_label_index to assign edge labels to the corresponding line graph nodes
-    node_label_line_graph[batch.edge_label_index[1]] = batch.edge_label.long()
-  
+    # node_label_line_graph[batch.edge_label_index[0]] = batch.edge_label.long()
+    # Number of edges
+    num_edges = batch.edge_index.size(1)
+
+    # Initialize labels with -1
+    edge_labels = torch.full((num_edges,), -1, dtype=torch.int)
+
+    # Assign labels to edges
+    for i in range(batch.edge_label_index.size(1)):
+        source = batch.edge_label_index[0, i].item()
+        target = batch.edge_label_index[1, i].item()
+
+        # Find the index of the edge in edge_index
+        edge_found = ((batch.edge_index[0] == source) & (batch.edge_index[1] == target)).nonzero(as_tuple=True)
+        
+        if edge_found[0].numel() > 0:
+            edge_index_pos = edge_found[0].item()  # Get the index of the edge
+            edge_labels[edge_index_pos] = batch.edge_label[i]
+    print(edge_labels)
+    exit(0)
     # Construct the line graph batch with nodes corresponding to the edges of the original graph
     if hasattr(batch, 'n_id'):
         del batch.n_id  # Remove edge_label attribute if it exists
@@ -138,10 +159,11 @@ def Get_data_loaders(dataset, num_val=0.05, num_test=0.1, disjoint_train_ratio=0
         num_test=num_test,
         disjoint_train_ratio=disjoint_train_ratio,
         neg_sampling_ratio=neg_sampling_ratio,
-        add_negative_train_samples=True)
+        add_negative_train_samples=True,
+        split_labels=False)
 
     train_data, val_data, test_data = transformer(dataset)
-
+    print(train_data)
 
     train_loader = LinkNeighborLoader(
         data=train_data,
@@ -436,7 +458,7 @@ def train_dual_gnn_model(train_loader, val_loader, epochs=500, aggr='mean',gnn_a
         print(f'Epoch {epoch+1}/{epochs}, Loss GNN1: {total_loss_gnn1:.4f}, Loss GNN2: {total_loss_gnn2:.4f}, Loss LC: {total_loss:.4f}, Train ROC AUC: {train_roc_auc:.4f} Validation ROC AUC: {val_roc_auc:.4f}')
 
 
-with open(f"data/datasets/processed/NSC.pkl", "rb") as file:
+with open(f"data/datasets/processed/BP.pkl", "rb") as file:
         data = pickle.load(file)
 
 train_loader, val_loader, test_loader = Get_data_loaders(data)
